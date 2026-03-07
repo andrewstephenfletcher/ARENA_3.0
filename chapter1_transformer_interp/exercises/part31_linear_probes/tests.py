@@ -30,14 +30,14 @@ def test_get_pca_components(get_pca_components_fn, activations_tensor, d_model: 
 
     # Check orthonormality
     gram = test_pcs.t() @ test_pcs
-    identity = t.eye(3)
+    identity = t.eye(3, device=test_pcs.device, dtype=test_pcs.dtype)
     assert t.allclose(gram, identity, atol=1e-4), f"Not orthonormal:\n{gram}"
 
     # Check variance explained is more than random
     X_centered = activations_tensor - activations_tensor.mean(dim=0)
-    projected = X_centered @ test_pcs
+    projected = X_centered @ test_pcs.to(activations_tensor.dtype)
     var_explained = projected.var(dim=0)
-    random_dirs = t.randn(d_model, 3)
+    random_dirs = t.randn(d_model, 3, device=activations_tensor.device, dtype=activations_tensor.dtype)
     random_dirs = random_dirs / random_dirs.norm(dim=0)
     random_projected = X_centered @ random_dirs
     random_var = random_projected.var(dim=0)
